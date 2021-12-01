@@ -42,7 +42,8 @@
         output wire [`InstSize] Reg_Data_1_LSB,
         output wire [`InstSize] Reg_Status_2_LSB,
         output wire [`InstSize] Reg_Data_2_LSB,
-        output wire [`InstSize] imm_LSB
+        output wire [`InstSize] imm_LSB,
+        output wire [`InstSize] ROB_NumbertoLSB
     );
     always @(*) begin
         if(clear||rst_in||!en_in) begin
@@ -78,6 +79,7 @@
                     Reg_Data_2_LSB = Reg_Data_2;
                     Reg_Status_2_LSB = `MAXN;
                     Reg_Data_2_LSB = imm;
+                    ROB_NumbertoLSB = ROB_Number;
                 end
                 `sb,`sh,`sw:begin
                     OpCode_o = OpCode;
@@ -92,7 +94,7 @@
                     Reg_Status_2_LSB = Reg_Status_2;
                     Reg_Data_2_LSB = Reg_Data_2;
                     imm_LSB = imm;
-
+                    ROB_NumbertoLSB = ROB_Number;
                 end
                 `add,`sub,`slt,`sltu,`xor,`or,`and,`sll,`srl,`sra: begin
                     OpCode_o = OpCode;
