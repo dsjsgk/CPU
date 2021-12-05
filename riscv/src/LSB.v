@@ -1,10 +1,9 @@
 `include "def.v"
-module LSB (parameter size = 32;)(
+module LSB (
     input wire clk_in,
     input wire rst_in,
     input wire rdy_in,
     input wire clear,
-    
     //ISSUE
     input wire en_in,
     input wire [`OpSize] OpCode,
@@ -13,26 +12,27 @@ module LSB (parameter size = 32;)(
     input wire [`InstSize] Reg_Status_2,
     input wire [`InstSize] Reg_Data_2,
     input wire [`InstSize] imm_LSB,
-    input wire [`InstSize] ROB_NumbertoLSB,
+    input wire [`RegAddrSize] ROB_NumbertoLSB,
     //ID
-    output wire LSB_is_full,
+    output reg LSB_is_full,
     //ROB
     input wire en_commit,
     input wire[`RegAddrSize] ROB_Number,
     input wire[`RegAddrSize] Reg_Number,
     input wire[`InstSize] Reg_Val,
-    output wire LSB_in,
-    output wire[`RegAddrSize] ROB_Number_LSB,
-    output wire[`InstSize] Value,
+    output reg LSB_in,
+    output reg[`RegAddrSize] ROB_Number_LSB,
+    output reg[`InstSize] Value,
     //MemCtrl
-    output wire data_w_en,
-    output wire[`InstSize] data_addr,
-    output wire[`InstSize] data_val,
-    output wire data_r_en,
-    output wire[`InstSize] data_len,
+    output reg data_w_en,
+    output reg[`InstSize] data_addr,
+    output reg[`InstSize] data_val,
+    output reg data_r_en,
+    output reg[`InstSize] data_len,
     input wire LSB_en_o,
     input wire[`InstSize] LSB_data_o
 );
+parameter size = 32;
 reg[`InstSize] Reg_Status1[`InstSize];
 reg[`InstSize] Reg_Data1[`InstSize];
 reg[`InstSize] Reg_Status2[`InstSize];
@@ -44,10 +44,15 @@ reg Commited[`InstSize];
 reg Valid[`InstSize];
 reg[`InstSize] head,tail;
 wire[`InstSize] _head,_tail;
-assign _tail = en_in?((tail+1)%size):tail;
+assign _tail = en_in?((tail+1)%size):tail;integer i;
 always @(posedge clk_in) begin
     if(rst_in||clear) begin
-        
+        head = 0;
+        tail = 0;
+        data_w_en = `zero;
+        data_r_en = `zero;
+        LSB_in = `zero;
+        LSB_is_full = `zero;
     end
     else if(rdy_in) begin
         if(en_in) begin
@@ -78,13 +83,13 @@ always @(posedge clk_in) begin
             end
             Valid[tail] <= 0;
             _OpCode[tail] <= OpCode;
-            ROB_Number_ <= ROB_NumbertoLSB;
+            ROB_Number_[tail] <= ROB_NumbertoLSB;
             Imm[tail] <=imm_LSB;
             Commited[tail] <= 0;
         end
         tail <= _tail;
         if(en_commit)begin
-            integer i;
+            
             for(i=head;i!=tail;i=(i+1)%size) begin
                 if(Reg_Status1[i]==ROB_Number) begin
                     Reg_Status1[i]<=`MAXN;
@@ -109,23 +114,23 @@ always @(posedge clk_in) begin
                         ROB_Number_LSB <= ROB_Number_[head];
                         data_w_en <= `zero;
                         data_r_en <=`zero;
-                        case(OpCode[head]) begin
+                        case(OpCode[head])
                         `lb:begin
                             if(LSB_data_o[7])begin
-                                Value <={24{1'b1},LSB_data_o[7:0]};
+                                Value <={{24{1'b1}},LSB_data_o[7:0]};
                             end
                             else Value<= LSB_data_o;
                         end
                         `lh:begin
                             if(LSB_data_o[15])begin
-                                Value <={16{1'b1},LSB_data_o[15:0]};
+                                Value <={{16{1'b1}},LSB_data_o[15:0]};
                             end
                             else Value<= LSB_data_o;
                         end
                         `lw,`lbu,`lhu:begin
                             Value <= LSB_data_o;
                         end
-                        end
+                        endcase
                     end
                     default:begin
                         

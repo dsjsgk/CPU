@@ -11,18 +11,18 @@ module MemCtrl
     input wire[`InstSize] data_val,
     input wire data_r_en,
     input wire[`InstSize] data_len,
-    output wire LSB_en_o,
-    output wire[`InstSize] LSB_data_o,
+    output reg LSB_en_o,
+    output reg[`InstSize] LSB_data_o,
    //FROM ICaChe
     input wire ICache_en_i,
     input wire[`InstSize] ICache_Addr,
-    output wire ICache_en_o,
-    output wire[`InstSize] ICache_Data,
+    output reg ICache_en_o,
+    output reg[`InstSize] ICache_Data,
     //From Ram
     input wire [`MemSize] ram_in,
-    output wire mem_wr_o,
-    output wire[`InstSize] mem_addr,
-    output wire[`MemSize] mem_wr_data
+    output reg mem_wr_o,
+    output reg[`InstSize] mem_addr,
+    output reg[`MemSize] mem_wr_data
 );
 reg[1:0] Cur_Status;
 reg[5:0] Cur_Cycle;
@@ -62,11 +62,11 @@ always @(posedge clk_in) begin
             end
             `Reading_Data:begin
                 case(Cur_Cycle) 
-                `0:begin
+                0:begin
                     Cur_Cycle <= Cur_Cycle+1;
                     mem_addr <= mem_addr+1;
                 end
-                `1:begin
+                1:begin
                     if(data_len == 1) begin
                         Cur_Cycle <= 0;
                         Cur_Status <= `Off;
@@ -80,7 +80,7 @@ always @(posedge clk_in) begin
                         mem_addr <= mem_addr+1;
                     end
                 end
-                `2:begin
+                2:begin
                     if(data_len == 2) begin
                         Cur_Cycle <= 0;
                         Cur_Status <= `Off;
@@ -94,11 +94,11 @@ always @(posedge clk_in) begin
                         mem_addr <= mem_addr+1;
                     end
                 end
-                `3:begin
+                3:begin
                     Cur_Cycle <= Cur_Cycle+1;
                     Val[23:16] <= ram_in;
                 end
-                `4:begin
+                4:begin
                     Cur_Cycle <= 0;
                     Cur_Status <= `Off;
                     LSB_en_o <= 1;
@@ -109,25 +109,25 @@ always @(posedge clk_in) begin
             end
             `Getting_Inst:begin
                 case(Cur_Cycle) 
-                `0:begin
+                0:begin
                     Cur_Cycle <= Cur_Cycle+1;
                     mem_addr <= mem_addr+1;
                 end
-                `1:begin
+                1:begin
                     Cur_Cycle <= Cur_Cycle+1;
                     Val[7:0] <= ram_in;
                     mem_addr <= mem_addr+1;
                 end
-                `2:begin
+                2:begin
                     Cur_Cycle <= Cur_Cycle+1;
                     Val[15:8] <= ram_in;
                     mem_addr <= mem_addr+1;
                 end
-                `3:begin
+                3:begin
                     Cur_Cycle <= Cur_Cycle+1;
                     Val[23:16] <= ram_in;
                 end
-                `4:begin
+                4:begin
                     Cur_Cycle <= 0;
                     Cur_Status <= `Off;
                     ICache_en_o <= 1;
@@ -138,7 +138,7 @@ always @(posedge clk_in) begin
             end
             `Writing_Data:begin
                 case(Cur_Cycle) 
-                `0:begin
+                0:begin
                     if(data_len == 1) begin
                         Cur_Cycle <= 0;
                         Cur_Status <= `Off;
@@ -152,7 +152,7 @@ always @(posedge clk_in) begin
                         mem_wr_data = data_val[15:8];
                     end
                 end
-                `1:begin
+                1:begin
                     if(data_len == 2) begin
                         Cur_Cycle <= 0;
                         Cur_Status <= `Off;
@@ -166,12 +166,12 @@ always @(posedge clk_in) begin
                         mem_wr_data = data_val[23:16];
                     end
                 end
-                `2:begin
+                2:begin
                     Cur_Cycle <= Cur_Cycle+1;
                     Val[31:24] <= ram_in;
                     mem_addr <= mem_addr+1;
                 end
-                `3:begin
+                3:begin
                     Cur_Cycle <= 0;
                     Cur_Status <= `Off;
                     LSB_en_o <= 1;

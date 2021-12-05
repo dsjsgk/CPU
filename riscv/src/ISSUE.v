@@ -13,52 +13,55 @@
         input wire [`RegAddrSize] rd,
         input wire [`InstSize] pc,
         //ROB
-        output wire ROB_o, 
-        output wire[`InstSize] pc_o,
-        output wire[`OpSize] OpCode_o,
-        output wire[`InstSize] imm_o,
-        output wire[`RegAddrSize] rd_o,
+        output reg ROB_o, 
+        output reg[`InstSize] pc_o,
+        output reg[`OpSize] OpCode_o,
+        output reg[`InstSize] imm_o,
+        output reg[`RegAddrSize] rd_o,
         input  wire[`RegAddrSize] ROB_Number,
         //REGFile
         input wire [`InstSize] Reg_Status_1,
         input wire [`InstSize] Reg_Data_1,
         input wire [`InstSize] Reg_Status_2,
         input wire [`InstSize] Reg_Data_2,
-        output wire Status_Change,
-        output wire[`RegAddrSize] register_addr,
-        output wire[`InstSize] goal,
+        output reg Status_Change,
+        output reg[`RegAddrSize] register_addr,
+        output reg[`InstSize] goal,
         //RS
-        output wire RS_o,
-        output wire [`RegAddrSize] ROB_Number_o,
-        output wire [`OpSize] OpCode_RS,
-        output wire [`InstSize] Reg_Status_1_RS,
-        output wire [`InstSize] Reg_Data_1_RS,
-        output wire [`InstSize] Reg_Status_2_RS,
-        output wire [`InstSize] Reg_Data_2_RS,
+        output reg RS_o,
+        output reg [`RegAddrSize] ROB_Number_o,
+        output reg [`OpSize] OpCode_RS,
+        output reg [`InstSize] Reg_Status_1_RS,
+        output reg [`InstSize] Reg_Data_1_RS,
+        output reg [`InstSize] Reg_Status_2_RS,
+        output reg [`InstSize] Reg_Data_2_RS,
         //LSB
-        output wire LSB_o,
-        output wire[`OpSize] OpCode_LSB,
-        output wire [`InstSize] Reg_Status_1_LSB,
-        output wire [`InstSize] Reg_Data_1_LSB,
-        output wire [`InstSize] Reg_Status_2_LSB,
-        output wire [`InstSize] Reg_Data_2_LSB,
-        output wire [`InstSize] imm_LSB,
-        output wire [`InstSize] ROB_NumbertoLSB
+        output reg LSB_o,
+        output reg[`OpSize] OpCode_LSB,
+        output reg [`InstSize] Reg_Status_1_LSB,
+        output reg [`InstSize] Reg_Data_1_LSB,
+        output reg [`InstSize] Reg_Status_2_LSB,
+        output reg [`InstSize] Reg_Data_2_LSB,
+        output reg [`InstSize] imm_LSB,
+        output reg [`RegAddrSize] ROB_NumbertoLSB
     );
     always @(*) begin
         if(clear||rst_in||!en_in) begin
-            
+            ROB_o = `zero;
+            Status_Change = `zero;
+            RS_o = `zero;
+            LSB_o = `zero;
         end
         else if(rdy_in) begin
             if(!en_in) begin
                 ROB_o = `zero;
-                Status_change = `zero;
+                Status_Change = `zero;
                 RS_o = `zero;
                 LSB_o = `zero;
             end
             else begin
             ROB_o = `zero;
-            Status_change = `zero;
+            Status_Change = `zero;
             RS_o = `zero;
             LSB_o = `zero;
             case(OpCode)

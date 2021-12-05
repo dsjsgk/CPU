@@ -25,12 +25,12 @@
 `define addi 6'b001001
 `define sub 6'b001010
 `define lui 6'b001011
-`define apuic 6'b001100
-`define _xor 6'b001101
+`define auipc 6'b001100
+`define xor 6'b001101
 `define xori 6'b001110
-`define _or 6'b001111
+`define or 6'b001111
 `define ori 6'b010000
-`define _and 6'b010001
+`define and 6'b010001
 `define andi 6'b010010
 `define sll 6'b010011
 `define slli 6'b010100

@@ -1,3 +1,4 @@
+`include "def.v"
 module ID(
     input wire clk_in,
     input wire rst_in,
@@ -8,15 +9,15 @@ module ID(
     input wire[`InstSize] pc_in,
     input wire en_in,
     input wire IQ_isempty,
-    output wire Get_Inst,
+    output reg Get_Inst,
     //ISSUE
-    output wire en_out;
-    output wire [`OpSize] OpCode;
-    output wire [`RegAddrSize] rs1,
-    output wire [`RegAddrSize] rs2,
-    output wire [`InstSize] imm,
-    output wire [`RegAddrSize] rd,
-    output wire [`InstSize] pc,
+    output reg en_out,
+    output reg [`OpSize] OpCode,
+    output reg [`RegAddrSize] rs1,
+    output reg [`RegAddrSize] rs2,
+    output reg [`InstSize] imm,
+    output reg [`RegAddrSize] rd,
+    output reg [`InstSize] pc,
 
     //ROB
     input wire ROB_isfull,
@@ -25,21 +26,21 @@ module ID(
     //LSB
     input wire LSB_isfull,
     //REGFile
-    output wire en_1,
-    output wire[`RegAddrSize] Addr_1,
-    output wire en_2,
-    output wire[`RegAddrSize] Addr_2
-);  
-always @(posedge clk) begin
+    output reg en_1,
+    output reg[`RegAddrSize] Addr_1,
+    output reg en_2,
+    output reg[`RegAddrSize] Addr_2
+);  integer i;
+always @(posedge clk_in) begin
     if(ROB_isfull||RS_isfull||LSB_isfull||IQ_isempty||!en_in||clear||rst_in) begin
-        en_1 <= zero;
-        en_2 <= zero;
-        Get_Inst <=zero;
-        en_out <= zero;
+        en_1 <= `zero;
+        en_2 <= `zero;
+        Get_Inst <=`zero;
+        en_out <= `zero;
 
     end 
     else begin
-        en_out<=one;
+        en_out<=`one;
         pc <= pc_in;
         case(Inst_in[6:0]) 
             7'b0000011: begin
@@ -54,11 +55,11 @@ always @(posedge clk) begin
                 rs1 <= Inst_in[19:15];
                 imm <= Inst_in[31:20];//?
                 if(Inst_in[31]) begin
-                    integer i;
+                    
                     for(i=12;i<32;++i) imm|=(1<<i);
                 end
-                en_1 <= one;
-                en_2 <= zero;
+                en_1 <= `one;
+                en_2 <= `zero;
                 Addr_1 <= rs1;
             end
             7'b0100011: begin
@@ -71,11 +72,10 @@ always @(posedge clk) begin
                 rs2 <= Inst_in[24:20];
                 imm <= Inst_in[11:7]+Inst_in[31:25]<<5;
                 if(Inst_in[31]) begin
-                    integer i;
                     for(i=12;i<32;++i) imm|=(1<<i);
                 end
-                en_1 <= one;
-                en_2 <= one;
+                en_1 <= `one;
+                en_2 <= `one;
                 Addr_1 <= rs1;
                 Addr_2 <= rs2;
             end
@@ -120,8 +120,8 @@ always @(posedge clk) begin
                 rs1 <= Inst_in[19:15];
                 rs2 <= Inst_in[24:20];
                 rd  <= Inst_in[11:7];
-                en_1 <= one;
-                en_2 <= one;
+                en_1 <= `one;
+                en_2 <= `one;
                 Addr_1 <= rs1;
                 Addr_2 <= rs2;
             end
@@ -153,11 +153,10 @@ always @(posedge clk) begin
                 rd  <= Inst_in[11:7];
                 imm <= Inst_in[31:20];//?
                 if(Inst_in[31]) begin
-                    integer i;
                     for(i=12;i<32;++i) imm|=(1<<i);
                 end
-                en_1 <= one;
-                en_2 <= zero;
+                en_1 <= `one;
+                en_2 <= `zero;
                 Addr_1 <= rs1;
                 Addr_2 <= rs2;
             end
@@ -165,15 +164,15 @@ always @(posedge clk) begin
                 OpCode <= `lui;
                 rd <= Inst_in[11:7];
                 imm <= Inst_in[31:12]<<12;   
-                en_1 <= zero;
-                en_2 <= zero;
+                en_1 <= `zero;
+                en_2 <= `zero;
             end 
             7'b0010111:begin
                 OpCode <= `auipc;
                 rd <= Inst_in[11:7];
                 imm <= Inst_in[31:12]<<12;   
-                en_1 <= zero;
-                en_2 <= zero;
+                en_1 <= `zero;
+                en_2 <= `zero;
             end
             7'b1100011:begin
                 case(Inst_in[14:12])
@@ -200,11 +199,10 @@ always @(posedge clk) begin
                 rs2 <= Inst_in[24:20];
                 imm <= Inst_in[11:7]+Inst_in[31:25]<<5;
                 if(Inst_in[31]) begin
-                    integer i;
                     for(i=12;i<32;++i) imm|=(1<<i);
                 end
-                en_1 <= one;
-                en_2 <= one;
+                en_1 <= `one;
+                en_2 <= `one;
                 Addr_1 <= rs1;
                 Addr_2 <= rs2;
             end
@@ -213,11 +211,10 @@ always @(posedge clk) begin
                 rd <= Inst_in[11:7];
                 imm <= Inst_in[31:12];
                 if(Inst_in[31]) begin
-                    integer i;
                     for(i=20;i<32;++i) imm|=(1<<i);
                 end
-                en_1 <= zero;
-                en_2 <= zero;
+                en_1 <= `zero;
+                en_2 <= `zero;
             end
             7'b1100111:begin
                 OpCode <= `jalr;
@@ -225,11 +222,10 @@ always @(posedge clk) begin
                 rs1 <= Inst_in[19:15];
                 imm <= Inst_in[31:20];
                 if(Inst_in[31]) begin
-                    integer i;
                     for(i=12;i<32;++i) imm|=(1<<i);
                 end
-                en_1 <= one;
-                en_2 <= zero;
+                en_1 <= `one;
+                en_2 <= `zero;
                 Addr_1 <= rs1;
             end
         endcase

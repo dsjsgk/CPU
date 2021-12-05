@@ -3,15 +3,15 @@ module ROB (
     input wire clk_in,
     input wire rst_in,
     input wire rdy_in,
-    input wire clear,
+    output reg clear,
     
     //CDB
-    output wire en_commit,
-    output wire[`RegAddrSize] ROB_Number,
-    output wire[`RegAddrSize] Reg_Number,
-    output wire[`InstSize] Reg_Val,
-    output wire pc_Change,
-    output wire[`InstSize] pc_goal,
+    output reg en_commit,
+    output reg[`RegAddrSize] ROB_Number,
+    output reg[`RegAddrSize] Reg_Number,
+    output reg[`InstSize] Reg_Val,
+    output reg pc_Change,
+    output reg[`InstSize] pc_goal,
     //ALU
     input wire ALU_in,
     input wire[`RegAddrSize] ROB_Number_ALU,
@@ -22,13 +22,13 @@ module ROB (
     input wire[`OpSize] OpCode_in,
     input wire[`InstSize] imm_in,
     input wire[`RegAddrSize] rd_in,
-    output wire[`RegAddrSize] ROB_Number,
+    output wire[`RegAddrSize] ROB_Number_in,
     //ID
-    output wire ROB_is_Full,
+    output reg ROB_is_Full,
     //LSB
     input wire LSB_in,
     input wire[`RegAddrSize] ROB_Number_LSB,
-    input wire[`InstSize] Value_LSB,
+    input wire[`InstSize] Value_LSB
     
 );
 parameter SIZE = 32;
@@ -41,8 +41,8 @@ reg [`InstSize] Val[`InstSize];
 reg [`InstSize] head,tail; 
 wire [`InstSize] _head,_tail;
 reg q_empty,q_full;
-
-assign _tail = (Inst_Status_in) ? (tail+1)%SIZE:tail;
+assign ROB_Number_in = tail;
+assign _tail = (ISSUE_in) ? (tail+1)%SIZE:tail;
 wire commit_enable;
 assign commit_enable = (!q_empty) &&is_ready[head];
 always @(posedge clk_in) begin
@@ -51,6 +51,9 @@ always @(posedge clk_in) begin
         tail<=0;
         q_empty<=`one;
         q_full <=`zero;
+        if(clear) begin
+            clear <= `zero;
+        end
     end
     else if(rdy_in) begin
         if(ISSUE_in) begin
@@ -60,12 +63,11 @@ always @(posedge clk_in) begin
             rd[tail] <=rd_in;
             is_ready[tail] <= `zero;
         end
-        
         if(commit_enable) begin
             head <= (head+1)%SIZE;
             q_empty <= (head+1)%SIZE==_tail;
-            q_full <= (((_tail+1)%SIZE==(head+1)%SIZE)||(_tail+2)%SIZE==(head+1)%SIZE));
-            ROB_is_Full <= (((_tail+1)%SIZE==(head+1)%SIZE)||(_tail+2)%SIZE==(head+1)%SIZE));
+            q_full <= (((_tail+1)%SIZE==(head+1)%SIZE)||((_tail+2)%SIZE==(head+1)%SIZE));
+            ROB_is_Full <= (((_tail+1)%SIZE==(head+1)%SIZE)||((_tail+2)%SIZE==(head+1)%SIZE));
             case(OpCode[head]) 
             `lb,`lh,`lw,`lbu,`lhu,`add,`addi,`sub,`lui,`auipc,`xor,`xori,`or,`ori,`and,`andi,`sll,`slli,`srl,`srli,`sra,`srai,`slt,`slti,`sltu,`sltiu:begin
                 en_commit <= `one;
@@ -79,6 +81,7 @@ always @(posedge clk_in) begin
                 if(Val[head]) begin
                     pc_Change <= `one;
                     pc_goal <= pc[head]+imm[head];
+                    clear <= `one;
                 end
                 else begin
                     pc_Change <= `zero;
@@ -92,6 +95,7 @@ always @(posedge clk_in) begin
                 Reg_Number <= rd[head];
                 Reg_Val <= Val[head];
                 pc_goal <= pc[head]+imm[head];
+                clear <= `one;
             end
             `jalr:begin
                 en_commit <= `one;
@@ -100,6 +104,7 @@ always @(posedge clk_in) begin
                 Reg_Number <= rd[head];
                 Reg_Val <= pc[head]+4;
                 pc_goal <= Val[head];
+                clear <= `one;
             end
             default : begin
                 en_commit <= `zero;
@@ -111,8 +116,8 @@ always @(posedge clk_in) begin
             
             head <= (head)%SIZE;
             q_empty <= (head)%SIZE==_tail;
-            q_full <= (((_tail+1)%SIZE==(head)%SIZE)||(_tail+2)%SIZE==(head)%SIZE));
-            ROB_is_Full <= (((_tail+1)%SIZE==(head)%SIZE)||(_tail+2)%SIZE==(head)%SIZE));
+            q_full <= (((_tail+1)%SIZE==(head)%SIZE)||((_tail+2)%SIZE==(head)%SIZE));
+            ROB_is_Full <= (((_tail+1)%SIZE==(head)%SIZE)||((_tail+2)%SIZE==(head)%SIZE));
             en_commit <= `zero;
             pc_Change <= `zero; 
         end
@@ -126,5 +131,5 @@ always @(posedge clk_in) begin
         end
 
     end
-end 
+end
 endmodule

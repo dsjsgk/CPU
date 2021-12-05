@@ -12,12 +12,13 @@ module ALU(
     input wire[`RegAddrSize] ROB_Number,
     //transfer to ROB
     output reg to_ROB_Status,
-    output wire[`RegAddrSize] ROB_Number_o,
+    output reg[`RegAddrSize] ROB_Number_o,
     output reg[`REGSize] val
-);
+);integer i ;
+reg temp;
 always @(*) begin
-    if(rst_in||claer||!status) begin
-        
+    if(rst_in||clear||!status) begin
+        to_ROB_Status <= `zero;
     end
     else if(rdy_in) begin
         to_ROB_Status = `one;
@@ -31,19 +32,19 @@ always @(*) begin
         `sll,`slli : val = rs1<<rs2[4:0];
         `srl,`srli : val = rs1>>rs2[4:0];
         `sra,`srai : begin
-            reg temp = rs1[31];
+            temp = rs1[31];
             val = rs1>>rs2[4:0];
-            integer i ;
-            for(i=32-rs2[3:0];i<32;++i) begin
+            
+            for(i=32-rs2[4:0];i<32;++i) begin
                 val = val | (temp<<i);
             end
         end
-        `slt,`slti : val = signed(rs1) < signed(rs2) ;
-        `sltu,`sltiu : val = unsigned(rs1) <unsigned(rs2);
-        `beq : val=signed(rs1)==signed(rs2);
-        `bne : val=signed(rs1)!=signed(rs2);
-        `blt : val=signed(rs1)<signed(rs2);
-        `bge : val=signed(rs1)>=signed(rs2);
+        `slt,`slti : val = $signed(rs1) < $signed(rs2) ;
+        `sltu,`sltiu : val = $unsigned(rs1) <$unsigned(rs2);
+        `beq : val=$signed(rs1)==$signed(rs2);
+        `bne : val=$signed(rs1)!=$signed(rs2);
+        `blt : val=$signed(rs1)<$signed(rs2);
+        `bge : val=$signed(rs1)>=$signed(rs2);
         `bltu : val=rs1<rs2;
         `bgeu : val=rs1>=rs2;
         endcase
