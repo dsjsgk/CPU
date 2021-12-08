@@ -1,6 +1,9 @@
 // riscv top module file
 // modification allowed for debugging purposes
-
+`include "cpu.v"
+`include "ram.v"
+`include "block_ram.v"
+`include "hci.v"
 module riscv_top
 #(
 	parameter SIM = 0						// whether in simulation

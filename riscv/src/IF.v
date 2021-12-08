@@ -29,18 +29,24 @@ always @(posedge clk_in) begin
         cur_pc <= 0;
         next_pc <= 4;
         Inst_Status_out <= `zero;
-        Inst_en <= `zero;
+        Inst_en <= `zero;//$display(1);
     end
     else if(clear) begin
+        //$display("%h",goal);
         cur_pc <= goal;
         next_pc <= goal+4;
         Inst_Status_out <= `zero;
         Inst_en <= `zero;
     end
     else if(rdy_in)begin
+            // if(Inst_Status_out)begin
+            //$display("%h",Inst_out);
+            // end
+            
             if(IQ_isfull!=`one && Inst_Status_in == `one) begin
                 Inst_out <= Inst_in;
                 pc_out <= cur_pc;
+                //$display("Curpc:","%h",cur_pc);
                 cur_pc <= next_pc;
                 next_pc <= next_pc+4;
                 Inst_Status_out <= `one;

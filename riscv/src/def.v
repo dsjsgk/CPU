@@ -1,14 +1,15 @@
 
 `define OpSize 5:0
+`define Waiting 3'b100
 `define RegAddrSize 4:0
 `define REGSize 31:0
 `define MAXN 32'd1000
 `define MemSize 7:0
 `define M_SSize 3:0
 `define Off 2'b00
-`define Getting_Inst 2'b01
-`define Reading_Data 2'b10
-`define Writing_Data 2'b11
+`define Getting_Inst 3'b001
+`define Reading_Data 3'b010
+`define Writing_Data 3'b011
 `define InstSize 31:0
 `define one 1'b1
 `define zero 1'b0

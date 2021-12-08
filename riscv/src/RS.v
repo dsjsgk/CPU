@@ -44,9 +44,13 @@ always @(posedge clk_in) begin
             valid [i] <= `zero;
         end
         RS_is_full <= `zero;
+        Calc_en <= `zero;
     end
     else if(rdy_in) begin
+        
         if(RS_in) begin
+            // $display("ROB_Number_in",ROB_Number);
+            // $display("OpCode:",OpCode_RS);
             if(free == `one)begin
                     valid[Addr2] <= `one;
                     if(commit_en&&Reg_Status_1_RS==commit_Number) begin
@@ -54,7 +58,9 @@ always @(posedge clk_in) begin
                         RS1_data[Addr2] <= commit_val;
                     end
                     else begin
+                        //$display("Reg_Status_1_RS:",Reg_Status_1_RS);
                         RS1_status[Addr2] <= Reg_Status_1_RS;
+                        //$display("Reg_Data_1_RS:",Reg_Data_1_RS);
                         RS1_data[Addr2] <= Reg_Data_1_RS;
                     end
                     if(commit_en&&Reg_Status_2_RS==commit_Number) begin
@@ -62,7 +68,9 @@ always @(posedge clk_in) begin
                         RS2_data[Addr2] <= commit_val;
                     end
                     else begin
+                        //$display("Reg_Status_2_RS:",Reg_Status_2_RS);
                         RS2_status[Addr2] <= Reg_Status_2_RS;
+                        //$display("Reg_Data_2_RS:",Reg_Data_2_RS);
                         RS2_data[Addr2] <= Reg_Data_2_RS;
                     end
                     ROB_id[Addr2] <= ROB_Number;
@@ -82,7 +90,7 @@ always @(posedge clk_in) begin
                 end
             end
         end
-        Calc_en = `zero;
+        
         if(goal1)begin
             valid[Addr1] <= `zero;
             Calc_en <= `one;
@@ -91,9 +99,13 @@ always @(posedge clk_in) begin
             OpCode_o <= OpCode[Addr1];
             ROB_Number_o <= ROB_id[Addr1];
         end
-         
+        else begin
+            Calc_en = `zero;
+        end
     end
 end
+reg[`InstSize] tmp;
+
 always @(*) begin
     goal1 = `zero;
     for(i=0;i<32;++i) begin
@@ -106,11 +118,14 @@ always @(*) begin
     end
     free = `zero;
     RS_is_full = `one;
+    tmp=0;
     for(i=0;i<32;++i) begin
         if(!valid[i]) begin
-            if(free == `one) RS_is_full = `zero;
+            tmp=tmp+1;
+            if(tmp==3) RS_is_full = `zero;
             free = `one;
             Addr2 = i;
+            //$display(i);
         end
     end
 end

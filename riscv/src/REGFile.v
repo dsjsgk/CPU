@@ -32,34 +32,59 @@ reg[`InstSize] register_data[`InstSize];
 reg[`InstSize] register_status[`InstSize];
 parameter MAXN = 32'd1000;
 integer i;
-initial begin
-    for(i=0;i<32;++i) begin
-        register_data[i]=0;
-        register_status[i]=MAXN;
-    end
-end
 always @(posedge clk_in) begin
-    if(rst_in==`one||clear==`one) begin
+    if(rst_in==`one) begin
         for(i=0;i<32;++i) begin
             register_status[i] <= `MAXN;
+            register_data[i] <= 0;
+        end
+    end
+    else if(clear) begin
+        for(i=0;i<32;++i) begin
+            register_status[i] <= `MAXN;
+            //register_status[i] <= 0;
         end
     end
     else if(rdy_in) begin
-        if(Status_Change_1==`one) begin
-            register_data[register_addr_1] <= goal_1;
-        end
-        if(clear==`one||rst_in==`one) begin
-            for(i=0;i<32;++i) begin
-                register_status[i]<=MAXN;
+        //$display(register_status[14],"----",register_data[14]);
+        //$display(register_status[15],"----",register_data[15]);
+        //if(Status_Change_2) $display("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
+        // $display(register_data[10][7:0]);
+        if(register_addr_2==register_addr_1) begin
+            if(register_addr_1!=0) begin
+                if(Status_Change_1==`one&&Status_Change_2==`one) begin
+                    register_status[register_addr_1] <= goal_1;
+                    register_data[register_addr_2] <= goal_2;
+                end
+                else if(Status_Change_1==`one) begin
+                    register_status[register_addr_1] <= goal_1;
+                end
+                else if(Status_Change_2==`one) begin
+                    if(Number==register_status[register_addr_2]) begin
+                        register_data[register_addr_2] <= goal_2;
+                        register_status[register_addr_2] <= `MAXN;
+                    end
+                    else begin
+                        register_data[register_addr_2] <= goal_2;
+                    end
+                end
             end
         end
-        if(Status_Change_2==`one) begin
-            if(Number==register_status[register_addr_2]) begin
-                register_data[register_addr_2] <= goal_2;
-                register_status[register_addr_2] <= MAXN;
+        else begin
+            if(Status_Change_1==`one) begin
+                if(register_addr_1!=0)
+                register_status[register_addr_1] <= goal_1;
             end
-            else begin
-                register_data[register_addr_2] <= goal_2;
+            if(Status_Change_2==`one) begin
+                if(register_addr_2!=0) begin
+                    if(Number==register_status[register_addr_2]) begin
+                        register_data[register_addr_2] <= goal_2;
+                        register_status[register_addr_2] <= `MAXN;
+                    end
+                    else begin
+                        register_data[register_addr_2] <= goal_2;
+                    end
+                end
             end
         end
     end
@@ -67,6 +92,7 @@ end
 always @(*) begin
     if(en_in_1==`one) begin
         //en_out_1=`one;
+        // $display("fuck",register_addr_1_out);
         Status_1=register_status[register_addr_1_out];
         data_1=register_data[register_addr_1_out];
     end

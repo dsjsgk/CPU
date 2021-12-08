@@ -71,6 +71,7 @@ wire[`RegAddrSize] rs2_to_ISSUE;
 wire[`InstSize] imm_to_ISSUE;
 wire[`RegAddrSize] rd_to_ISSUE;
 wire[`InstSize] pc_to_ISSUE;
+wire[`InstSize] Inst_btw_ID_ISSUE;
 //ID to REGFile
 wire en_to_REGFile_1;
 wire[`RegAddrSize] ADDR_to_REGFile_1;
@@ -83,6 +84,8 @@ wire[`OpSize] OpCode_to_ROB;
 wire[`InstSize] imm_to_ROB;
 wire[`RegAddrSize] rd_to_ROB;
 wire[`RegAddrSize] ROB_Number_to_ISSUE;
+wire Is_io_reading;
+wire[`InstSize] Inst_btw_ROB_ISSUE;
 //REGFile to ISSUE
 wire[`InstSize] Reg_to_ISSUE_1_Status;
 wire[`InstSize] Reg_to_ISSUE_2_Status;
@@ -135,13 +138,41 @@ wire[`InstSize] Val_LSB_to_MemCtrl;
 wire[`InstSize] len_LSB_to_MemCtrl;
 wire en_MemCtrl_to_LSB;
 wire[`InstSize] data_MemCtrl_to_LSB;
+
+////
+wire[`RegAddrSize] _ROB_head;
+MemCtrl MemCtrl0(
+    .clear(clear),
+    .clk_in(clk_in),
+    .rst_in(rst_in),
+    .rdy_in(rdy_in),
+    //FROM LSB
+    .data_w_en(en_w_LSB_to_MemCtrl),
+    .data_addr(Addr_LSB_to_MemCtrl),
+    .data_val(Val_LSB_to_MemCtrl),
+    .data_r_en(en_r_LSB_to_MemCtrl),
+    .data_len(len_LSB_to_MemCtrl),
+    .LSB_en_o(en_MemCtrl_to_LSB),
+    .LSB_data_o(data_MemCtrl_to_LSB),
+   //FROM ICaChe
+    .ICache_en_i(en_ICache_to_MemCtrl),
+    .ICache_Addr(Addr_ICache_to_MemCtrl),
+    .ICache_en_o(en_MemCtrl_to_ICache),
+    .ICache_Data(Data_MemCtrl_to_ICache),
+    //From Ram
+    .ram_in(mem_din),
+    .mem_wr_o(mem_wr),
+    .mem_addr(mem_a),
+    .mem_wr_data(mem_dout),
+    .io_buffer_full(io_buffer_full)
+);
 IF IF0
   (
     .clear(clear),
     .clk_in(clk_in),
     .rst_in(rst_in),
     .rdy_in(rdy_in),
-    .IQ_isfull(IQ_isfull),
+    .IQ_isfull(IQ_is_full),
     .Inst_Status_out(en_to_IQ),
     .Inst_out(Inst_to_IQ),
     .pc_out(pc_to_IQ) ,
@@ -171,7 +202,7 @@ ID ID0(
     .imm(imm_to_ISSUE),
     .rd(rd_to_ISSUE),
     .pc(pc_to_ISSUE),
-
+    .Inst_debug(Inst_btw_ID_ISSUE),
     //ROB
     .ROB_isfull(ROB_is_full),
     //RS
@@ -215,6 +246,7 @@ ISSUE ISSUE0(
         .imm(imm_to_ISSUE),
         .rd(rd_to_ISSUE),
         .pc(pc_to_ISSUE),
+        .Inst_debug_in(Inst_btw_ID_ISSUE),
         //ROB
         .ROB_o(en_to_ROB), 
         .pc_o(pc_to_ROB),
@@ -222,6 +254,7 @@ ISSUE ISSUE0(
         .imm_o(imm_to_ROB),
         .rd_o(rd_to_ROB),
         .ROB_Number(ROB_Number_to_ISSUE),
+        .Inst_debug_out(Inst_btw_ROB_ISSUE),
         //REGFile
         .Reg_Status_1(Reg_to_ISSUE_1_Status),
         .Reg_Data_1(Reg_to_ISSUE_1_data),
@@ -272,12 +305,14 @@ ISSUE ISSUE0(
     .imm_in(imm_to_ROB),
     .rd_in(rd_to_ROB),
     .ROB_Number_in(ROB_Number_to_ISSUE),
+    .Inst_debug_in(Inst_btw_ROB_ISSUE),
     //ID
     .ROB_is_Full(ROB_is_full),
     //LSB
     .LSB_in(en_LSB_to_ROB),
     .ROB_Number_LSB(ROB_Number_LSB_to_ROB),
-    .Value_LSB(Value_LSB_to_ROB)
+    .Value_LSB(Value_LSB_to_ROB),
+    .ROB_head(_ROB_head)
 );
 RS RS0(
     .clear(clear),
@@ -321,30 +356,6 @@ ALU ALU0(
     .ROB_Number_o(ROB_Number_ALU_to_ROB),
     .val(Value_ALU_to_ROB)
 );
-MemCtrl MemCtrl0(
-    .clear(clear),
-    .clk_in(clk_in),
-    .rst_in(rst_in),
-    .rdy_in(rdy_in),
-    //FROM LSB
-    .data_w_en(en_w_LSB_to_MemCtrl),
-    .data_addr(Addr_LSB_to_MemCtrl),
-    .data_val(Val_LSB_to_MemCtrl),
-    .data_r_en(en_r_LSB_to_MemCtrl),
-    .data_len(len_LSB_to_MemCtrl),
-    .LSB_en_o(en_MemCtrl_to_LSB),
-    .LSB_data_o(data_MemCtrl_to_LSB),
-   //FROM ICaChe
-    .ICache_en_i(en_ICache_to_MemCtrl),
-    .ICache_Addr(Addr_ICache_to_MemCtrl),
-    .ICache_en_o(en_MemCtrl_to_ICache),
-    .ICache_Data(Data_MemCtrl_to_ICache),
-    //From Ram
-    .ram_in(mem_din),
-    .mem_wr_o(mem_wr),
-    .mem_addr(mem_a),
-    .mem_wr_data(mem_dout)
-);
 ICache ICache0(
     .clear(clear),
     .clk_in(clk_in),
@@ -385,6 +396,7 @@ LSB LSB0(
     .LSB_in(en_LSB_to_ROB),
     .ROB_Number_LSB(ROB_Number_LSB_to_ROB),
     .Value(Value_LSB_to_ROB),
+    .ROB_head(_ROB_head),
     //MemCtrl
     .data_w_en(en_w_LSB_to_MemCtrl),
     .data_addr(Addr_LSB_to_MemCtrl),
@@ -406,7 +418,7 @@ REGFile REGFile0(
     .goal_1(goal_to_RegFile),
 
     //FROM COMMIT
-    .Status_Change_2(en_commit),
+    .Status_Change_2(commited),
     .register_addr_2(commit_Reg_Number),
     .goal_2(commit_Reg_Val),
     .Number(commit_ROB_Number),
