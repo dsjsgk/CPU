@@ -30,7 +30,15 @@ reg[3:0] Cur_Status;
 reg[5:0] Cur_Cycle;
 reg[`InstSize] Val; 
 always @(posedge clk_in) begin
-    if(rst_in||clear) begin
+    if(rst_in) begin
+        mem_wr_o <= `zero;
+        ICache_en_o <= `zero;
+        Val <= 0;
+        LSB_en_o <= `zero;
+        Cur_Status <= `Off;
+        Cur_Cycle <= 0;
+    end
+    else if(clear&&Cur_Status!=`Writing_Data) begin
         mem_wr_o <= `zero;
         ICache_en_o <= `zero;
         Val <= 0;
@@ -47,6 +55,8 @@ always @(posedge clk_in) begin
                     mem_wr_o <= 1;
                     mem_addr <= data_addr;
                     mem_wr_data <= data_val[7:0];
+                    
+                    // $display("in",data_val);
                     // if(data_addr==196608)begin
                     //  $display("Writing_DATA\n");
                     //  $display(data_val);
@@ -163,7 +173,7 @@ always @(posedge clk_in) begin
                     else begin
                         Cur_Cycle <= Cur_Cycle+1;
                         mem_addr <= mem_addr+1;
-                        mem_wr_data = data_val[15:8];
+                        mem_wr_data <= data_val[15:8];
                     end
                 end
                 1:begin
@@ -179,12 +189,12 @@ always @(posedge clk_in) begin
                     else begin
                         Cur_Cycle <= Cur_Cycle+1;
                         mem_addr <= mem_addr+1;
-                        mem_wr_data = data_val[23:16];
+                        mem_wr_data <= data_val[23:16];
                     end
                 end
                 2:begin
                     Cur_Cycle <= Cur_Cycle+1;
-                    Val[31:24] <= ram_in;
+                    mem_wr_data <= data_val[31:24];
                     mem_addr <= mem_addr+1;
                 end
                 3:begin

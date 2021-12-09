@@ -13,6 +13,7 @@ module LSB (
     input wire [`InstSize] Reg_Data_2,
     input wire [`InstSize] imm_LSB,
     input wire [`RegAddrSize] ROB_NumbertoLSB,
+    input wire [`InstSize] Inst_debug_in,
     //ID
     output reg LSB_is_full,
     //ROB
@@ -41,6 +42,7 @@ reg[`InstSize] Reg_Data2[`InstSize];
 reg[`InstSize] _OpCode[`InstSize];
 reg[`InstSize] ROB_Number_[`InstSize];
 reg[`InstSize] Imm[`InstSize];
+reg[`InstSize] _Inst[`InstSize];
 reg Commited[`InstSize];
 reg Valid[`InstSize];
 reg[`InstSize] head,tail;
@@ -51,6 +53,9 @@ assign _tail = (en_in&&!clear)?((tail+1)%size):tail;
 integer i;
 reg commited_number;
 always @(posedge clk_in) begin
+    // if(clear==1) begin
+    //     $display("gg");
+    // end
     if(rst_in) begin
         head <= 0;
         tail <= 0;
@@ -104,8 +109,12 @@ always @(posedge clk_in) begin
             _OpCode[tail] <= OpCode;
             ROB_Number_[tail] <= ROB_NumbertoLSB;
             Imm[tail] <=imm_LSB;
+            _Inst[tail] <= Inst_debug_in;
             // $display(imm_LSB);
             Commited[tail] <= 0;
+            // if(Inst_debug_in==653565987) begin
+                // $display("FUCCCCCCk");
+            // end
         end
         tail <= _tail;
         if(en_commit)begin
@@ -182,6 +191,8 @@ always @(posedge clk_in) begin
                         data_r_en <=`one;
                         data_addr <= Imm[head]+Reg_Data1[head];
                         data_len <= 1;
+                        // $display("0 addr:",Reg_Data1[head]+Imm[head]);
+                        // $display("%h",_Inst[head]);
                     end
                     else begin
                         LSB_in <= `zero;
@@ -197,6 +208,8 @@ always @(posedge clk_in) begin
                         data_r_en <=`one;
                         data_addr <= Imm[head]+Reg_Data1[head];
                         data_len <= 2;
+                        // $display("1 addr:",Reg_Data1[head]+Imm[head]);
+                        // $display("%h",_Inst[head]);
                     end
                     else begin
                         LSB_in <= `zero;
@@ -212,6 +225,8 @@ always @(posedge clk_in) begin
                         data_r_en <=`one;
                         data_addr <= Imm[head]+Reg_Data1[head];
                         data_len <= 4;
+                        // $display("2 addr:",Reg_Data1[head]+Imm[head]);
+                        // $display("%h",_Inst[head]);
                     end
                     else begin
                         LSB_in <= `zero;
@@ -230,6 +245,8 @@ always @(posedge clk_in) begin
                         // $display(Imm[head]+Reg_Data1[head]);
                         data_addr <= Imm[head]+Reg_Data1[head];
                         data_len <= 1;
+                        // $display("3 addr:",Reg_Data1[head]+Imm[head]);
+                        // $display("%h",_Inst[head]);
                     end
                     else begin
                         LSB_in <= `zero;
@@ -245,6 +262,8 @@ always @(posedge clk_in) begin
                         data_r_en <=`one;
                         data_addr <= Imm[head]+Reg_Data1[head];
                         data_len <= 2;
+                        // $display("4 addr:",Reg_Data1[head]+Imm[head]);
+                        // $display("%h",_Inst[head]);
                     end
                     else begin
                         LSB_in <= `zero;
@@ -262,7 +281,8 @@ always @(posedge clk_in) begin
                         data_addr <= Imm[head]+Reg_Data1[head];
                         data_val <= Reg_Data2[head][7:0];
                         data_len <= 1;
-                        //$display(Reg_Data1[head]+Imm[head]);
+                        // $display(Reg_Data2[head][7:0]," 1 addr:",Reg_Data1[head]+Imm[head]);
+                        // $display("%h",_Inst[head]);
                     end
                     else begin
                         LSB_in <= `zero;
@@ -279,6 +299,8 @@ always @(posedge clk_in) begin
                         data_addr <= Imm[head]+Reg_Data1[head];
                         data_val <= Reg_Data2[head][14:0];
                         data_len <= 2;
+                        // $display(Reg_Data2[head][14:0]," 2 addr:",Reg_Data1[head]+Imm[head]);
+                        // $display("%h",_Inst[head]);
                     end
                     else begin
                         LSB_in <= `zero;
@@ -295,6 +317,8 @@ always @(posedge clk_in) begin
                         data_addr <= Imm[head]+Reg_Data1[head];
                         data_val <= Reg_Data2[head];
                         data_len <= 4;
+                        // $display(Reg_Data2[head]," 4 addr: ",Reg_Data1[head]+Imm[head]);
+                        // $display("%h",_Inst[head]);
                     end
                     else begin
                         LSB_in <= `zero;
@@ -317,11 +341,11 @@ end
 reg[`InstSize] tmp;
 always @(*) begin
     if(clear) begin
-        tmp=head;
+        tmp=(head+31)%size;
         for(i=head;i!=tail;i=(i+1)%size) begin
             if(Commited[i]) tmp=i;
         end
-        tail=tmp;
+        tail=(tmp+1)%size;
         LSB_is_full = ((tail+1)%size==head)||((tail+2)%size==head)||((tail+3)%size==head);
         if(tail==head&&Valid[head]) begin
             data_w_en = `zero;

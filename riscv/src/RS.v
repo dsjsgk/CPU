@@ -45,6 +45,7 @@ always @(posedge clk_in) begin
         end
         RS_is_full <= `zero;
         Calc_en <= `zero;
+        
     end
     else if(rdy_in) begin
         

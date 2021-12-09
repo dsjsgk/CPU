@@ -28,8 +28,8 @@ always @(posedge clk_in) begin
         Addr[IF_addr[`CacheBus]] <= IF_addr;
     end
 end
-always @(*) begin
-    if(rst_in)begin
+always @(*) begin 
+    if(rst_in||clear)begin
         data_get_en = `zero;
         en_o_IF = `zero;
     end

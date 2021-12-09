@@ -33,6 +33,10 @@ reg[`InstSize] register_status[`InstSize];
 parameter MAXN = 32'd1000;
 integer i;
 always @(posedge clk_in) begin
+    if(clear||Status_Change_2) begin
+        // $display("begin");
+        // for(i=0;i<32;++i) $display("%0d",register_data[i]);
+    end
     if(rst_in==`one) begin
         for(i=0;i<32;++i) begin
             register_status[i] <= `MAXN;
@@ -44,12 +48,17 @@ always @(posedge clk_in) begin
             register_status[i] <= `MAXN;
             //register_status[i] <= 0;
         end
+        if(Status_Change_2==`one) begin
+            if(register_addr_2!=0)
+            register_data[register_addr_2] <= goal_2;
+        end
     end
     else if(rdy_in) begin
         //$display(register_status[14],"----",register_data[14]);
         //$display(register_status[15],"----",register_data[15]);
         //if(Status_Change_2) $display("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
-        // $display(register_data[10][7:0]);
+        // $display(register_data[10]);
+        // $display(register_data[11]);
         if(register_addr_2==register_addr_1) begin
             if(register_addr_1!=0) begin
                 if(Status_Change_1==`one&&Status_Change_2==`one) begin

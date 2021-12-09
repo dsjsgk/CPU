@@ -26,7 +26,11 @@
 ***************************************************************************************************/
 
 // modification allowed for debugging purposes
-
+`include "fifo.v"
+`include "uart_baud_clk.v"
+`include "uart_rx.v"
+`include "uart_tx.v"
+`include "uart.v"
 module hci
 #(
   parameter SYS_CLK_FREQ = 100000000,

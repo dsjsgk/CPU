@@ -191,11 +191,14 @@ always @(posedge clk_in) begin
                 7'b0010111:begin
                     OpCode <= `auipc;
                     rd <= Inst_in[11:7];
-                    imm <= {Inst_in[31:12],12'b0};   
+                    imm <= Inst_in[31:12]<<12;   
                     en_1 <= `zero;
                     en_2 <= `zero;
                 end
                 7'b1100011:begin
+                    // if(Inst_in==4273367779)begin
+                    //     $display("DEBUG",Inst_in[19:15],Inst_in[24:20]);
+                    // end
                     case(Inst_in[14:12])
                     3'b000: begin
                         OpCode<=`beq;
@@ -233,10 +236,10 @@ always @(posedge clk_in) begin
                     OpCode <= `jal;
                     rd <= Inst_in[11:7];
                     if(Inst_in[31]) begin
-                        imm <= {{12{1'b1}},Inst_in[31],Inst_in[19:12],Inst_in[20],Inst_in[30:21],1'b0};
+                        imm <= {{11{1'b1}},Inst_in[31],Inst_in[19:12],Inst_in[20],Inst_in[30:21],1'b0};
                     end
                     else begin
-                        imm <= {{12{1'b0}},Inst_in[31],Inst_in[19:12],Inst_in[20],Inst_in[30:21],1'b0};
+                        imm <= {{11{1'b0}},Inst_in[31],Inst_in[19:12],Inst_in[20],Inst_in[30:21],1'b0};
                     end
                     
                     en_1 <= `zero;

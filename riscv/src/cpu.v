@@ -386,6 +386,7 @@ LSB LSB0(
     .Reg_Data_2(Reg_Data_2_ISSUE_to_LSB),
     .imm_LSB(imm_ISSUE_to_LSB),
     .ROB_NumbertoLSB(ROB_Number_ISSUE_to_LSB),
+    .Inst_debug_in(Inst_btw_ROB_ISSUE),
     //ID
     .LSB_is_full(LSB_is_full),
     //ROB

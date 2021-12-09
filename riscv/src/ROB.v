@@ -48,6 +48,11 @@ assign _tail = (ISSUE_in) ? (tail+1)%SIZE:tail;
 wire commit_enable;
 assign commit_enable = (!q_empty) &&is_ready[head];
 assign ROB_head = head;
+
+reg[`InstSize] TOT;
+initial begin
+    TOT=0;
+end
 always @(posedge clk_in) begin
     // if(pc_Change==1)$display(pc_Change);
     if(rst_in||clear) begin
@@ -58,6 +63,9 @@ always @(posedge clk_in) begin
         if(clear) begin
             clear <= `zero;
         end
+        ROB_is_Full <= `zero;
+        pc_Change <= `zero;
+        en_commit <= `zero;
     end
     else if(rdy_in) begin
         //$display("fucl");
@@ -98,7 +106,10 @@ always @(posedge clk_in) begin
             q_empty <= (head+1)%SIZE==_tail;
             q_full <= (((_tail+1)%SIZE==(head+1)%SIZE)||((_tail+2)%SIZE==(head+1)%SIZE)||((_tail+3)%SIZE==(head+1)%SIZE));
             ROB_is_Full <= (((_tail+1)%SIZE==(head+1)%SIZE)||((_tail+2)%SIZE==(head+1)%SIZE)||((_tail+3)%SIZE==(head+1)%SIZE));
-            // $display("%h",pc[head]);
+            // $display("%h",_Inst[head]);
+            TOT <= TOT+1;
+            
+            
             // $display("Head:",head);
             // $display("tail:",tail);
             case(OpCode[head]) 
@@ -108,6 +119,10 @@ always @(posedge clk_in) begin
                 ROB_Number <= head;
                 Reg_Number <= rd[head];
                 Reg_Val <= Val[head];
+                // if(1480339==_Inst[head]) begin
+                //         $display("Fuck");
+                //         $display(clear);
+                //     end
                 // $display("cur_commitNumber:",OpCode[head]);
                 // $display(en_commit);
                 //  $display("rd[head]",rd[head]);
@@ -115,16 +130,18 @@ always @(posedge clk_in) begin
 
             end
             `beq,`bne,`blt,`bge,`bltu,`bgeu:begin
-                en_commit <= `zero;
+                
                 // $display(Val[head]);
                 if(Val[head]) begin
                     pc_Change <= `one;
                     pc_goal <= pc[head]+imm[head];
-                    clear <= `one;
-                    
+                    clear <= `one;en_commit <= `zero;
                 end
                 else begin
+                    
                     pc_Change <= `zero;
+                    en_commit <= `one;
+                    Reg_Number <= 0;
                     //pc_goal <= pc[head]+imm[head];
                 end
             end
