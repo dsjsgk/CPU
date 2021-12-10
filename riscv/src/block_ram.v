@@ -80,6 +80,7 @@ always @(posedge clk)
     if (we)
         ram[addr_a] <= din_a;
     q_addr_a <= addr_a;
+    // $display({ram[131032+3],ram[131032+2],ram[131032+1],ram[131032]});
   end
 
 assign dout_a = ram[q_addr_a];

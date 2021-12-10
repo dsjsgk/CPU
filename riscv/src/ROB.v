@@ -49,10 +49,10 @@ wire commit_enable;
 assign commit_enable = (!q_empty) &&is_ready[head];
 assign ROB_head = head;
 
-reg[`InstSize] TOT;
-initial begin
-    TOT=0;
-end
+// reg[`InstSize] TOT;
+// initial begin
+//     TOT=0;
+// end
 always @(posedge clk_in) begin
     // if(pc_Change==1)$display(pc_Change);
     if(rst_in||clear) begin
@@ -106,10 +106,11 @@ always @(posedge clk_in) begin
             q_empty <= (head+1)%SIZE==_tail;
             q_full <= (((_tail+1)%SIZE==(head+1)%SIZE)||((_tail+2)%SIZE==(head+1)%SIZE)||((_tail+3)%SIZE==(head+1)%SIZE));
             ROB_is_Full <= (((_tail+1)%SIZE==(head+1)%SIZE)||((_tail+2)%SIZE==(head+1)%SIZE)||((_tail+3)%SIZE==(head+1)%SIZE));
-            // $display("%h",_Inst[head]);
-            TOT <= TOT+1;
-            
-            
+            // $display("Inst: %h ",_Inst[head],"head: ",head);
+            // if(34048611==_Inst[head]) begin
+            //     TOT <= TOT+1;
+            //     if(TOT==9) $finish;
+            // end
             // $display("Head:",head);
             // $display("tail:",tail);
             case(OpCode[head]) 
@@ -136,6 +137,7 @@ always @(posedge clk_in) begin
                     pc_Change <= `one;
                     pc_goal <= pc[head]+imm[head];
                     clear <= `one;en_commit <= `zero;
+                    // $display("-----------------------------------");
                 end
                 else begin
                     
@@ -153,6 +155,7 @@ always @(posedge clk_in) begin
                 Reg_Val <= Val[head];
                 pc_goal <= pc[head]+imm[head];
                 clear <= `one;
+                // $display("-----------------------------------");
                 //$display(pc[head]+imm[head]);
             end
             `jalr:begin
@@ -163,6 +166,7 @@ always @(posedge clk_in) begin
                 Reg_Val <= pc[head]+4;
                 pc_goal <= Val[head];
                 clear <= `one;
+                // $display("-----------------------------------");
             end
             default : begin
                 en_commit <= `one;
@@ -180,13 +184,13 @@ always @(posedge clk_in) begin
             en_commit <= `zero;
             pc_Change <= `zero; 
         end
-        if(ALU_in) begin
+        if(ALU_in&&head!=tail) begin
             is_ready[ROB_Number_ALU] <= `one;
             //$display(ROB_Number_ALU);
             Val[ROB_Number_ALU] <= Value;
-            //$display(Value);
+            // $display("Value",Value);
         end
-        if(LSB_in) begin
+        if(LSB_in&&head!=tail) begin
             is_ready[ROB_Number_LSB] <= `one;
             Val[ROB_Number_LSB] <= Value_LSB;
         end

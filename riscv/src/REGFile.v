@@ -33,10 +33,12 @@ reg[`InstSize] register_status[`InstSize];
 parameter MAXN = 32'd1000;
 integer i;
 always @(posedge clk_in) begin
-    if(clear||Status_Change_2) begin
+    // if(clear||Status_Change_2) begin
         // $display("begin");
         // for(i=0;i<32;++i) $display("%0d",register_data[i]);
-    end
+        // $display("data:" ,register_data[15],"status:" ,register_status[15]);
+        // $display("data:" ,register_data[11],"status:" ,register_status[11]);
+    // end
     if(rst_in==`one) begin
         for(i=0;i<32;++i) begin
             register_status[i] <= `MAXN;
@@ -106,7 +108,8 @@ always @(*) begin
         data_1=register_data[register_addr_1_out];
     end
     else begin
-        //en_out_1=`zero;
+        Status_1=0;
+        data_1=0;
     end
     if(en_in_2==`one) begin
         //en_out_2=`one;
@@ -114,7 +117,8 @@ always @(*) begin
         data_2=register_data[register_addr_2_out];
     end
     else begin
-        //en_out_2=`zero;
+        Status_2=0;
+        data_2=0;
     end
 end
 endmodule

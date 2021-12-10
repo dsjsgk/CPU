@@ -329,6 +329,7 @@ RS RS0(
     .Reg_Data_1_RS(Reg_Data_1_ISSUE_to_RS),
     .Reg_Status_2_RS(Reg_Status_2_ISSUE_to_RS),
     .Reg_Data_2_RS(Reg_Data_2_ISSUE_to_RS),
+    .Inst_debug_in(Inst_btw_ROB_ISSUE),
     //from ROB
     .commit_en(commited),
     .commit_Number(commit_ROB_Number),

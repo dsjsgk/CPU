@@ -297,7 +297,7 @@ always @(posedge clk_in) begin
                         data_w_en <=`one;
                         data_r_en <=`zero;
                         data_addr <= Imm[head]+Reg_Data1[head];
-                        data_val <= Reg_Data2[head][14:0];
+                        data_val <= Reg_Data2[head][15:0];
                         data_len <= 2;
                         // $display(Reg_Data2[head][14:0]," 2 addr:",Reg_Data1[head]+Imm[head]);
                         // $display("%h",_Inst[head]);

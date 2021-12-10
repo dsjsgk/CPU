@@ -135,6 +135,12 @@ always @(posedge clk_in) begin
                     endcase
                     rs1 <= Inst_in[19:15];
                     rs2 <= Inst_in[24:20];
+                    // if(16091059==Inst_in) begin
+                    //     $display("FUCKKKKKKKKKklkKK");
+                    //     $display(Inst_in[19:15]);
+                    //     $display(Inst_in[24:20]);
+                    //     $display("FUCCKKKKKKKKKKK");
+                    // end
                     rd  <= Inst_in[11:7];
                     en_1 <= `one;
                     en_2 <= `one;

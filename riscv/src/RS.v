@@ -14,6 +14,7 @@ module RS (
     input wire [`InstSize] Reg_Data_1_RS,
     input wire [`InstSize] Reg_Status_2_RS,
     input wire [`InstSize] Reg_Data_2_RS,
+    input wire [`InstSize] Inst_debug_in,
     //from ROB
     input wire commit_en,
     input wire[`RegAddrSize] commit_Number,
@@ -31,6 +32,7 @@ reg[`InstSize] RS2_data[`InstSize];
 reg[`InstSize] RS1_status[`InstSize];
 reg[`InstSize] RS2_status[`InstSize];
 reg[`RegAddrSize] ROB_id[`InstSize];
+reg[`InstSize] _Inst[`InstSize];
 reg[`OpSize] OpCode[`InstSize];
 integer i;
 reg goal1;
@@ -52,6 +54,7 @@ always @(posedge clk_in) begin
         if(RS_in) begin
             // $display("ROB_Number_in",ROB_Number);
             // $display("OpCode:",OpCode_RS);
+            
             if(free == `one)begin
                     valid[Addr2] <= `one;
                     if(commit_en&&Reg_Status_1_RS==commit_Number) begin
@@ -75,19 +78,31 @@ always @(posedge clk_in) begin
                         RS2_data[Addr2] <= Reg_Data_2_RS;
                     end
                     ROB_id[Addr2] <= ROB_Number;
-                    OpCode[Addr2] <= OpCode_RS;
+                    OpCode[Addr2] <= OpCode_RS;_Inst[Addr2] <= Inst_debug_in;
+                   
                     //break;
             end
         end
-        for(i=0;i<32;++i) begin
-            if(valid[i]) begin
-                if(RS1_status[i]==commit_Number) begin
-                    RS1_status[i] <= `MAXN;
-                    RS1_data[i] <= commit_val;
-                end
-                if(RS2_status[i]==commit_Number) begin
-                    RS2_status[i] <= `MAXN;
-                    RS2_data[i] <= commit_val;
+        if(commit_en) begin
+            for(i=0;i<32;++i) begin
+                if(valid[i]) begin 
+                    // if(16091059==_Inst[Addr2]) begin
+                    //     $display("FUCKKKKKKKKKklkKK");
+                    //     $display(Reg_Status_1_RS);
+                    //     $display(Reg_Status_2_RS);
+                    //     $display(Reg_Data_1_RS);
+                    //     $display(Reg_Data_2_RS);
+                    //     $display(Addr2);
+                    //     $display("FUCCKKKKKKKKKKK");
+                    // end
+                    if(RS1_status[i]==commit_Number) begin
+                        RS1_status[i] <= `MAXN;
+                        RS1_data[i] <= commit_val;
+                    end
+                    if(RS2_status[i]==commit_Number) begin
+                        RS2_status[i] <= `MAXN;
+                        RS2_data[i] <= commit_val;
+                    end
                 end
             end
         end
@@ -109,6 +124,7 @@ reg[`InstSize] tmp;
 
 always @(*) begin
     goal1 = `zero;
+    Addr1 = 0;
     for(i=0;i<32;++i) begin
         if(valid[i]) begin
             if(RS1_status[i]==`MAXN&&RS2_status[i]==`MAXN) begin
@@ -120,6 +136,7 @@ always @(*) begin
     free = `zero;
     RS_is_full = `one;
     tmp=0;
+    Addr2 = 0;
     for(i=0;i<32;++i) begin
         if(!valid[i]) begin
             tmp=tmp+1;

@@ -123,6 +123,14 @@
                     Reg_Status_2_RS = Reg_Status_2;
                     Reg_Data_2_RS = Reg_Data_2;
                     ROB_Number_o = ROB_Number;
+                    // if(16091059==Inst_debug_in) begin
+                    //     $display("FUCKKKKKKKKKklkKK");
+                    //     $display(Reg_Data_1);
+                    //     $display(Reg_Data_2);
+                    //     $display(Reg_Status_1);
+                    //     $display(Reg_Status_2);
+                    //     $display("FUCCKKKKKKKKKKK");
+                    // end
                 end
                 `addi,`slti,`sltiu,`xori,`ori,`andi,`slli,`srli,`srai:begin
                     OpCode_o = OpCode;
