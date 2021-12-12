@@ -31,7 +31,8 @@ module ROB (
     input wire LSB_in,
     input wire[`RegAddrSize] ROB_Number_LSB,
     input wire[`InstSize] Value_LSB,
-    output wire[`RegAddrSize] ROB_head
+    output wire[`RegAddrSize] ROB_head,
+    output reg program_end
 );
 parameter SIZE = 32;
 reg [`InstSize] pc[`InstSize];
@@ -63,6 +64,9 @@ always @(posedge clk_in) begin
         tail<=0;
         q_empty<=`one;
 //        q_full <=`zero;
+        if(rst_in) begin
+            program_end <= 0;
+        end
         if(clear) begin
             clear <= `zero;
         end
@@ -136,6 +140,10 @@ always @(posedge clk_in) begin
             q_empty <= (head+1)%SIZE==_tail;
 //            q_full <= (((_tail+1)%SIZE==(head+1)%SIZE)||((_tail+2)%SIZE==(head+1)%SIZE)||((_tail+3)%SIZE==(head+1)%SIZE));
             ROB_is_Full <= (((_tail+1)%SIZE==(head+1)%SIZE)||((_tail+2)%SIZE==(head+1)%SIZE)||((_tail+3)%SIZE==(head+1)%SIZE)||((_tail+4)%SIZE==(head+1)%SIZE));
+            if(pc[head]==8) begin
+                // $display("FUCK");
+                program_end <= 1;
+            end
             // $display("Inst: %h",_Inst[head]);
             // if(_Inst[head]==12657667) begin
                 
