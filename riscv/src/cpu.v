@@ -1,15 +1,4 @@
-`include "def.v"
-`include "IQ.v"
-`include "ID.v"
-`include "IF.v"
-`include "ROB.v"
-`include "LSB.v"
-`include "ALU.v"
-`include "ISSUE.v"
-`include "MemCtrl.v"
-`include "RS.v"
-`include "ICache.v"
-`include "REGFile.v"
+
 module cpu(
   input  wire                 clk_in,			// system clock signal
   input  wire                 rst_in,			// reset signal
@@ -47,6 +36,7 @@ wire commited;
 wire[`RegAddrSize] commit_ROB_Number;
 wire[`RegAddrSize] commit_Reg_Number;
 wire[`InstSize] commit_Reg_Val;
+wire is_Store;
 //IQ to IF
 wire IQ_isfull;
 wire[`InstSize] Inst_to_IQ;
@@ -135,7 +125,7 @@ wire en_w_LSB_to_MemCtrl;
 wire en_r_LSB_to_MemCtrl;
 wire[`InstSize] Addr_LSB_to_MemCtrl;
 wire[`InstSize] Val_LSB_to_MemCtrl;
-wire[`InstSize] len_LSB_to_MemCtrl;
+wire[3:0] len_LSB_to_MemCtrl;
 wire en_MemCtrl_to_LSB;
 wire[`InstSize] data_MemCtrl_to_LSB;
 
@@ -294,6 +284,7 @@ ISSUE ISSUE0(
     .Reg_Val(commit_Reg_Val),
     .pc_Change(pc_Change),
     .pc_goal(pc_goal),
+    .is_Store(is_Store),
     //ALU
     .ALU_in(en_ALU_to_ROB),
     .ROB_Number_ALU(ROB_Number_ALU_to_ROB),
@@ -399,6 +390,7 @@ LSB LSB0(
     .ROB_Number_LSB(ROB_Number_LSB_to_ROB),
     .Value(Value_LSB_to_ROB),
     .ROB_head(_ROB_head),
+    .is_Store(is_Store),
     //MemCtrl
     .data_w_en(en_w_LSB_to_MemCtrl),
     .data_addr(Addr_LSB_to_MemCtrl),
