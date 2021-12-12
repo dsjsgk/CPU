@@ -24,6 +24,7 @@ module ROB (
     input wire[`RegAddrSize] rd_in,
     input wire[`InstSize] Inst_debug_in,
     output wire[`RegAddrSize] ROB_Number_in,
+    output reg is_Store,
     //ID
     output reg ROB_is_Full,
     //LSB
@@ -42,30 +43,37 @@ reg [`InstSize] Val[`InstSize];
 reg [`InstSize] head,tail; 
 wire [`InstSize] _head,_tail;
 reg[`InstSize] _Inst[`InstSize];
-reg q_empty,q_full;
+reg q_empty;
 assign ROB_Number_in = tail;
 assign _tail = (ISSUE_in) ? (tail+1)%SIZE:tail;
 wire commit_enable;
 assign commit_enable = (!q_empty) &&is_ready[head];
 assign ROB_head = head;
-
+integer i;
 // reg[`InstSize] TOT;
 // initial begin
 //     TOT=0;
 // end
+// reg debugger;
 always @(posedge clk_in) begin
     // if(pc_Change==1)$display(pc_Change);
+    
     if(rst_in||clear) begin
         head<=0;
         tail<=0;
         q_empty<=`one;
-        q_full <=`zero;
+//        q_full <=`zero;
         if(clear) begin
             clear <= `zero;
         end
+        // else begin
+        //     debugger <= 0;
+        // end
         ROB_is_Full <= `zero;
         pc_Change <= `zero;
         en_commit <= `zero;
+        is_Store <= `zero;
+        
     end
     else if(rdy_in) begin
         //$display("fucl");
@@ -89,24 +97,51 @@ always @(posedge clk_in) begin
             // $display("OpCodeRRRRROB:", OpCode_in);
             // $display("TTTTTTAIl",tail);
             imm[tail] <= imm_in;
-            _Inst[tail] <= Inst_debug_in;
+           _Inst[tail] <= Inst_debug_in;
             //$display("Imm:",rd_in);
             //$display("imm:",imm_in);
             rd[tail] <=rd_in;
-            if(OpCode_in==`sb||OpCode_in==`sh||OpCode_in==`sw) begin
-                is_ready[tail] <= `one;
+            // if(OpCode_in==`sb||OpCode_in==`sh||OpCode_in==`sw) begin
+                
+            // end
+            // else begin
+            //     is_ready[tail] <= `zero;
+            // end
+        end
+        for(i=0;i<32;i=i+1) begin
+            if(i==tail&&ISSUE_in) begin
+                if(OpCode_in==`sb||OpCode_in==`sh||OpCode_in==`sw) begin
+                    is_ready[i] <= `one;
+                end
+                else begin
+                    is_ready[i] <= `zero;
+                end
             end
-            else begin
-                is_ready[tail] <= `zero;
+            else if(LSB_in&&i==ROB_Number_LSB) begin
+                is_ready[i] <= `one;
+                Val[i] <= Value_LSB;
+            end
+            else if(ALU_in&&i==ROB_Number_ALU) begin
+                is_ready[i] <= `one;
+                Val[i] <= Value;
             end
         end
+        // if(debugger) begin
+        //         $display(head," ",tail);
+        //         $display(ROB_is_Full);
+        //     end
         if(commit_enable) begin
             //$display("fuck");
             head <= (head+1)%SIZE;
             q_empty <= (head+1)%SIZE==_tail;
-            q_full <= (((_tail+1)%SIZE==(head+1)%SIZE)||((_tail+2)%SIZE==(head+1)%SIZE)||((_tail+3)%SIZE==(head+1)%SIZE));
-            ROB_is_Full <= (((_tail+1)%SIZE==(head+1)%SIZE)||((_tail+2)%SIZE==(head+1)%SIZE)||((_tail+3)%SIZE==(head+1)%SIZE));
-            // $display("Inst: %h ",_Inst[head],"head: ",head);
+//            q_full <= (((_tail+1)%SIZE==(head+1)%SIZE)||((_tail+2)%SIZE==(head+1)%SIZE)||((_tail+3)%SIZE==(head+1)%SIZE));
+            ROB_is_Full <= (((_tail+1)%SIZE==(head+1)%SIZE)||((_tail+2)%SIZE==(head+1)%SIZE)||((_tail+3)%SIZE==(head+1)%SIZE)||((_tail+4)%SIZE==(head+1)%SIZE));
+            // $display("Inst: %h",_Inst[head]);
+            // if(_Inst[head]==12657667) begin
+                
+            //     debugger <= 1;
+            // end
+            
             // if(34048611==_Inst[head]) begin
             //     TOT <= TOT+1;
             //     if(TOT==9) $finish;
@@ -120,6 +155,7 @@ always @(posedge clk_in) begin
                 ROB_Number <= head;
                 Reg_Number <= rd[head];
                 Reg_Val <= Val[head];
+                is_Store <= `zero;
                 // if(1480339==_Inst[head]) begin
                 //         $display("Fuck");
                 //         $display(clear);
@@ -142,10 +178,11 @@ always @(posedge clk_in) begin
                 else begin
                     
                     pc_Change <= `zero;
-                    en_commit <= `one;
+                    en_commit <= `zero;
                     Reg_Number <= 0;
                     //pc_goal <= pc[head]+imm[head];
                 end
+                is_Store <= `zero;
             end
             `jal:begin
                 en_commit <= `one;
@@ -155,6 +192,7 @@ always @(posedge clk_in) begin
                 Reg_Val <= Val[head];
                 pc_goal <= pc[head]+imm[head];
                 clear <= `one;
+                is_Store <= `zero;
                 // $display("-----------------------------------");
                 //$display(pc[head]+imm[head]);
             end
@@ -166,10 +204,12 @@ always @(posedge clk_in) begin
                 Reg_Val <= pc[head]+4;
                 pc_goal <= Val[head];
                 clear <= `one;
+                is_Store <= `zero;
                 // $display("-----------------------------------");
             end
             default : begin
                 en_commit <= `one;
+                is_Store <= `one;
                 pc_Change <= `zero;
                 ROB_Number <= head;
                 Reg_Number <= 0;
@@ -179,22 +219,41 @@ always @(posedge clk_in) begin
         else begin
             head <= head;
             q_empty <= head==_tail;
-            q_full <= (((_tail+1)%SIZE==head)||((_tail+2)%SIZE==head)||((_tail+3)%SIZE==head));
-            ROB_is_Full <= (((_tail+1)%SIZE==head)||((_tail+2)%SIZE==head)||((_tail+3)%SIZE==head));
+//            q_full <= (((_tail+1)%SIZE==head)||((_tail+2)%SIZE==head)||((_tail+3)%SIZE==head));
+            ROB_is_Full <= (((_tail+1)%SIZE==head)||((_tail+2)%SIZE==head)||((_tail+3)%SIZE==head)||((_tail+4)%SIZE==head));
             en_commit <= `zero;
             pc_Change <= `zero; 
-        end
-        if(ALU_in&&head!=tail) begin
-            is_ready[ROB_Number_ALU] <= `one;
-            //$display(ROB_Number_ALU);
-            Val[ROB_Number_ALU] <= Value;
-            // $display("Value",Value);
-        end
-        if(LSB_in&&head!=tail) begin
-            is_ready[ROB_Number_LSB] <= `one;
-            Val[ROB_Number_LSB] <= Value_LSB;
+            is_Store <= `zero;
+            
         end
         tail<=_tail;
     end
 end
+// always @(posedge clk_in) begin
+//     if(rst_in||clear) begin
+        
+//     end
+//     else if(rdy_in) begin
+//         if(LSB_in&&head!=tail) begin
+//             is_ready[ROB_Number_LSB] <= `one;
+//             Val[ROB_Number_LSB] <= Value_LSB;
+//         end
+//     end
+// end
+// always @(posedge clk_in) begin
+//     if(rst_in||clear) begin
+        
+//     end
+//     else if(rdy_in) begin
+//         if(ISSUE_in) begin
+//             if(OpCode_in==`sb||OpCode_in==`sh||OpCode_in==`sw) begin
+//                 is_ready[tail] <= `one;
+//             end
+//             else begin
+//                 is_ready[tail] <= `zero;
+//             end
+//         end
+//     end
+// end
+
 endmodule
