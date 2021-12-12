@@ -1,4 +1,3 @@
-
 module cpu(
   input  wire                 clk_in,			// system clock signal
   input  wire                 rst_in,			// reset signal
@@ -128,7 +127,7 @@ wire[`InstSize] Val_LSB_to_MemCtrl;
 wire[3:0] len_LSB_to_MemCtrl;
 wire en_MemCtrl_to_LSB;
 wire[`InstSize] data_MemCtrl_to_LSB;
-
+wire program_End;
 ////
 wire[`RegAddrSize] _ROB_head;
 MemCtrl MemCtrl0(
@@ -154,7 +153,8 @@ MemCtrl MemCtrl0(
     .mem_wr_o(mem_wr),
     .mem_addr(mem_a),
     .mem_wr_data(mem_dout),
-    .io_buffer_full(io_buffer_full)
+    .io_buffer_full(io_buffer_full),
+    .program_end(program_End)
 );
 IF IF0
   (
@@ -303,7 +303,8 @@ ISSUE ISSUE0(
     .LSB_in(en_LSB_to_ROB),
     .ROB_Number_LSB(ROB_Number_LSB_to_ROB),
     .Value_LSB(Value_LSB_to_ROB),
-    .ROB_head(_ROB_head)
+    .ROB_head(_ROB_head),
+    .program_end(program_End)
 );
 RS RS0(
     .clear(clear),
