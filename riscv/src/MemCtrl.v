@@ -12,6 +12,10 @@ module MemCtrl
 
     input wire clear,
 
+    input wire program_end,
+
+    
+
     //FROM LSB
 
     input wire data_w_en,
@@ -60,11 +64,12 @@ reg[5:0] Cur_Cycle;
 
 reg[`InstSize] Val; 
 
-reg program_end;
+// reg program_end;
 
 reg[`InstSize] Clk_Number;
 
-
+reg[2:0] temp_Number;
+reg[2:0] tmp_Number;
 
 always @(posedge clk_in) begin
 
@@ -85,6 +90,9 @@ always @(posedge clk_in) begin
         Cur_Status <= `Off;
 
         Cur_Cycle <= 0;
+
+        temp_Number <= 0;
+        tmp_Number <= 0;
 
         // program_end=0;
 
@@ -117,36 +125,7 @@ always @(posedge clk_in) begin
     end
 
     else if(rdy_in) begin
-
-        //$display("LSB_en_o",LSB_en_o);
-
-        
-
-    // $display(Clk_Number);
-
-        if(Clk_Number == `END1) begin
-
-            mem_wr_o <= 1;
-
-            mem_addr <= 0;
-
-            mem_wr_data <= 1;
-
-            Clk_Number <= Clk_Number +1;
-
-        end
-
-        else if(Clk_Number == `END2) begin
-
-            mem_wr_o <= 1;
-
-            mem_addr <= 196612;
-
-            mem_wr_data <= 1;
-
-        end
-
-        else begin case(Cur_Status)
+             case(Cur_Status)
 
             `Off: begin
 
@@ -173,7 +152,29 @@ always @(posedge clk_in) begin
                         mem_wr_data <= data_val[7:0];Clk_Number <= Clk_Number +1;
 
                     end
+                    tmp_Number <= 0;
+                end
 
+                else if(program_end) begin
+                    case(tmp_Number)
+                    0: begin
+                        mem_wr_o <= 0;
+                        mem_addr <= 0;
+                        tmp_Number <= 1;
+                    end
+                    1: begin
+                        mem_wr_o <= 0;
+                        mem_addr <= 0;
+                        tmp_Number <= 2;
+                    end
+                    2: begin
+                        if(!io_buffer_full) begin
+                            // $display("fuck");
+                            mem_addr <= 196612;
+                            mem_wr_o <= 1;
+                        end
+                    end
+                    endcase
                 end
 
                 else if(data_r_en) begin
@@ -730,7 +731,7 @@ always @(posedge clk_in) begin
 
         endcase
 
-        end
+        // end
 
     end
 
