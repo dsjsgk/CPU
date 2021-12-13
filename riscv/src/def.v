@@ -38,7 +38,7 @@
 
 `define zero 1'b0
 
-`define CacheBus 8:0
+`define CacheBus 10:2
 
 `define lb 6'b000000
 
