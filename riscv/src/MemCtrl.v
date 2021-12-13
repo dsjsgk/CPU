@@ -1,74 +1,29 @@
 `include "def.v"
-
-
-
 module MemCtrl
-
-
-
 (
-
-
-
     input wire clk_in,
-
-
-
     input wire rst_in,
-
-
-
     input wire rdy_in,
-
-
-
     input wire clear,
-
-
-
     input wire program_end,
-
-
-
-    
-
-
 
     //FROM LSB
 
-
-
     input wire data_w_en,
 
-
-
     input wire[`InstSize] data_addr,
-
-
-
+    
     input wire[`InstSize] data_val,
-
-
 
     input wire data_r_en,
 
-
-
     input wire[3:0] data_len,
-
-
 
     output reg LSB_en_o,
 
-
-
     output reg[`InstSize] LSB_data_o,
 
-
-
    //FROM ICaChe
-
-
 
     input wire ICache_en_i,
 
@@ -1438,42 +1393,22 @@ always @(posedge clk_in) begin
 
                     LSB_data_o <= ram_in;
 
-
-
                     Val<=0; 
-
-
 
                     Cur_Status <= `Waiting;
 
-
-
                 end
-
-
 
                 endcase
 
-
-
             end
-
-
 
         endcase
 
-
-
         // end
-
-
 
     end
 
-
-
 end
-
-
 
 endmodule
